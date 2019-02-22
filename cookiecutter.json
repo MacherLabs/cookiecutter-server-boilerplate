@@ -22,5 +22,5 @@
     "docker_registry": "macherlabs.azurecr.io",
     
     "build_system": ["drone"],
-    "build_system_url": "https://drone.vedalabs.in"
+    "build_system_url": "https://drone.ci.vedalabs.in"
 }

@@ -1,5 +1,13 @@
 {% if cookiecutter.framework == "flask" %}
-FROM python:2.7.15-alpine3.8
+
+{% if cookiecutter.project_type == "apiserver" %}
+FROM {% if cookiecutter.use_alipine_base == "y" %}python:2.7.15-alpine3.8 {% else %}python:2.7.15 {% endif %}
+{% elif cookiecutter.project_type == "behaviour" %}
+FROM macherlabs.azurecr.io/edge:latest_cpu
+{% else %}
+FROM ubuntu
+{% endif %}
+
 {% elif cookiecutter.framework == "nodejs" %}
 FROM node:8
 {% else %}
@@ -30,10 +38,10 @@ RUN chmod +x /app/serve.sh
 RUN /app/install.sh
 
 # Add Tini init system
-{% if cookiecutter.framework == "flask" %}
+{% if cookiecutter.use_alipine_base == "y" %}
 RUN apk add --no-cache tini
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/entrypoint.sh"]
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.use_alipine_base == "n" %}
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini

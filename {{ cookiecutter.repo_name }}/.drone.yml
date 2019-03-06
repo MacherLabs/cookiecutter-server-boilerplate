@@ -23,10 +23,16 @@ pipeline:
       event: push
 {% endraw %}
 {% if cookiecutter.framework == "flask" %}  test:
-    image: python:2.7.15-alpine3.8
+    {% if cookiecutter.project_type == "apiserver" %}
+    image: {% if cookiecutter.use_alipine_base == "y" %}python:2.7.15-alpine3.8 {% else %}python:2.7.15 {% endif %}
+    {% elif cookiecutter.project_type == "behaviour" %}
+    image: macherlabs.azurecr.io/edge:latest_cpu
+    {% else %}
+    image: ubuntu
+    {% endif %}
     commands:
       - cd app
-      - apk add --no-cache build-base libffi-dev
+      {% if cookiecutter.use_alipine_base == "y" %}- apk add --no-cache build-base libffi-dev {% endif %}
       - pip install -r requirements.txt
       - pip install -e .
     when:
@@ -34,10 +40,16 @@ pipeline:
       event: push
 
   generate_swagger:
-    image: python:2.7.15-alpine3.8
+    {% if cookiecutter.project_type == "apiserver" %}
+    image: {% if cookiecutter.use_alipine_base == "y" %}python:2.7.15-alpine3.8 {% else %}python:2.7.15 {% endif %}
+    {% elif cookiecutter.project_type == "behaviour" %}
+    image: macherlabs.azurecr.io/edge:latest_cpu
+    {% else %}
+    image: ubuntu
+    {% endif %}
     commands:
       - cd app
-      - apk add --no-cache build-base libffi-dev
+      {% if cookiecutter.use_alipine_base == "y" %}- apk add --no-cache build-base libffi-dev {% endif %}
       - pip install click
       - pip install -r requirements.txt
       - pip install -e .
@@ -49,15 +61,15 @@ pipeline:
       branch: [ master, release/* ]
       event: push
 
-  generate_angular_client: 
-    image: node:8
-    commands: 
-      - cd ./build/angular-client
-      - npm install -g ng-swagger-gen
-      - ng-swagger-gen -i ../../app/src/docs/swagger.json -o ./
-    when:
-      branch: [ master, release/* ]
-      event: push
+  # generate_angular_client: 
+  #   image: node:8
+  #   commands: 
+  #     - cd ./build/angular-client
+  #     - npm install -g ng-swagger-gen
+  #     - ng-swagger-gen -i ../../app/src/docs/swagger.json -o ./
+  #   when:
+  #     branch: [ master, release/* ]
+  #     event: push
 
   # publish_angular_client:
   #   image: plugins/npm

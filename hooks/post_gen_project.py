@@ -16,3 +16,11 @@ if __name__ == '__main__':
             extra_context={{ cookiecutter | jsonify }})
         distutils.dir_util.copy_tree('{{ cookiecutter.repo_name }}', APP_DIRECTORY)
         distutils.dir_util.remove_tree('{{ cookiecutter.repo_name }}')
+
+    if '{{ cookiecutter.framework }}' == 'express' and '{{ cookiecutter.project_type }}' in ['apiserver']:
+        cookiecutter(
+            'https://github.com/macherlabs/cookiecutter-{{ cookiecutter.framework }}-{{ cookiecutter.project_type }}.git', 
+            no_input=True,
+            extra_context={{ cookiecutter | jsonify }})
+        distutils.dir_util.copy_tree('{{ cookiecutter.repo_name }}', APP_DIRECTORY)
+        distutils.dir_util.remove_tree('{{ cookiecutter.repo_name }}')

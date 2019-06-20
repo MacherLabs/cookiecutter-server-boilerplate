@@ -82,12 +82,12 @@ pipeline:
   #   when:
   #     branch: release/*
   #     event: push
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.framework == "express" %}
   test:
     image: node:8
     commands:
       - cd app
-      - npm install
+      - npm ci
       - npm test
     when:
       branch: [ master, release/* ]

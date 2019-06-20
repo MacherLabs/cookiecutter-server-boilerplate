@@ -4,7 +4,7 @@
 __pycache__/  # Exclude the whole folder
 *.egg-info
 *.pyc
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.framework == "express" %}
 app/node_modules
 {% else %}
 {% endif %}

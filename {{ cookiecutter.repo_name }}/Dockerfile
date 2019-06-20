@@ -8,7 +8,7 @@ FROM macherlabs.azurecr.io/edge:latest_cpu
 FROM ubuntu
 {% endif %}
 
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.framework == "express" %}
 FROM node:8
 {% else %}
 FROM ubuntu
@@ -64,7 +64,7 @@ ENV APP_MODULE {{ cookiecutter.repo_name.lower().replace('-', '_') }}
 ENV APP_THREADS 2
 # Make /app/* available to be imported by Python globally to better support several use cases like Alembic migrations.
 ENV PYTHONPATH=/app
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.framework == "express" %}
 ENV APP_HOST_NAME {{ cookiecutter.host_name }}
 {% else %}
 ENV APP_HOST_NAME {{ cookiecutter.host_name }}

@@ -5,7 +5,7 @@
     "project_short_description": "{{ cookiecutter.repo_name.replace('-', ' ').title() }} for VedaLabs.",
     "version": "0.1.0",
 
-    "framework": ["flask", "nodejs", "other"],
+    "framework": ["flask", "express", "other"],
     "use_alipine_base": ["y","n"],
     "port": "8000",
     "host_name": "api.vedalabs.in",

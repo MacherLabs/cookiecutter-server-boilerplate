@@ -2,7 +2,7 @@
 
 {% if cookiecutter.framework == "flask" %}
 pip install -e .
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.framework == "express" %}
 npm install
 {% else %}
 #  Install depedencies etc over here. 

@@ -15,7 +15,7 @@ Following pre-requisites are needed before installation:
 
 {% if cookiecutter.framework == "flask" %}
 - python 2.7
-{% elif cookiecutter.framework == "nodejs" %}
+{% elif cookiecutter.framework == "express" %}
 - node 8
 {% else %}
 {% endif %}

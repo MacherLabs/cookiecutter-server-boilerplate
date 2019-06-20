@@ -9,7 +9,7 @@ FROM ubuntu
 {% endif %}
 
 {% elif cookiecutter.framework == "express" %}
-FROM node:8
+FROM node:{% if cookiecutter.use_alipine_base == "y" %}alpine {% else %}latest {% endif %}
 {% else %}
 FROM ubuntu
 {% endif %}

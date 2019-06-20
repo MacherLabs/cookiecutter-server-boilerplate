@@ -11,7 +11,7 @@ APP_DIRECTORY = 'app'
 if __name__ == '__main__':
     if '{{ cookiecutter.framework }}' == 'flask' and '{{ cookiecutter.project_type }}' in ['apiserver', 'behaviour']:
         cookiecutter(
-            'https://github.com/macherlabs/cookiecutter-vedalabs-{{ cookiecutter.framework }}-{{ cookiecutter.project_type }}.git', 
+            'https://github.com/macherlabs/cookiecutter-{{ cookiecutter.framework }}-{{ cookiecutter.project_type }}.git', 
             no_input=True,
             extra_context={{ cookiecutter | jsonify }})
         distutils.dir_util.copy_tree('{{ cookiecutter.repo_name }}', APP_DIRECTORY)

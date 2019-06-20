@@ -10,17 +10,16 @@
     "port": "8000",
     "host_name": "api.vedalabs.in",
     
-    "version_control": ["bitbucket"],
-    "git_username": "ashutoshdtu",
-    "full_name": "Ashutosh Mishra",
-    "email": "ashutosh@vedalabs.in",
+    "version_control": ["bitbucket","gitlab"],
+    "git_username": "codegenerator",
+    "full_name": "VedaLabs Bot",
+    "email": "tech@vedalabs.in",
     "git_organization": "macherlabs",
-    
+
     "organization_name": "VedaLabs",
     "organization_website": "https://vedalabs.in",
     
     "docker_registry": "macherlabs.azurecr.io",
-    
-    "build_system": ["drone"],
-    "build_system_url": "https://drone.ci.vedalabs.in"
+    "build_system": ["drone","gitlabci"],
+    "build_system_url": ""
 }

@@ -22,7 +22,7 @@ pip install cookiecutter
 
 Scaffold your project (from bitbucket):
 ```
-cookiecutter gh:macherlabs/cookiecutter-vedalabs-server-boilerplate
+cookiecutter gh:macherlabs/cookiecutter-server-boilerplate
 ```
 
 ![server scaffolding](https://cloud.githubusercontent.com/assets/3332051/10678207/df1f2de0-78de-11e5-84b7-62484ddfea56.gif)

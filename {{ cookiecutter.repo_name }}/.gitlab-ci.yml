@@ -1,0 +1,38 @@
+image: docker:git
+services:
+  - docker:dind
+# variables:
+#   DOCKER_DRIVER: overlay
+
+# cache:
+#   paths:
+#     - node_modules/
+
+stages:
+  - build
+  # - test
+  - deploy
+
+before_script:
+  - printenv
+  
+devbuild:
+  stage: build
+  script:
+    - docker login -u $docker_username -p $docker_password $docker_registry
+    - docker build -t "$docker_registry/$docker_username/$CI_PROJECT_NAME:latest" .
+    - docker push "$docker_registry/$docker_username/$CI_PROJECT_NAME:latest"
+  only:
+    - master
+
+devdeploy:
+  stage: deploy
+  image: "dtzar/helm-kubectl:$drone_version"
+  script:
+    - mkdir -p /root/.kube
+    - cp "$kube_config" /root/.kube/config
+    - kubectl get pods -n=staging 
+    - ls && pwd
+    # - helm upgrade --install express-ping-service ./charts/$CI_PROJECT_NAME --namespace staging --debug --wait
+  only:
+    - master

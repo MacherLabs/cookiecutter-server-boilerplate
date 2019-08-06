@@ -1,38 +1,91 @@
 image: docker:git
 services:
   - docker:dind
-# variables:
-#   DOCKER_DRIVER: overlay
-
-# cache:
-#   paths:
-#     - node_modules/
 
 stages:
+  - notify
   - build
-  # - test
+  - test
   - deploy
+  - cleanup
 
-before_script:
-  - printenv
-  
+prodbuild:
+  stage: build
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY
+    - docker build -t $DOCKER_USERNAME/$CI_PROJECT_NAME:latest .
+    - docker tag $DOCKER_USERNAME/$CI_PROJECT_NAME:latest "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:latest"
+    - docker push "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:latest"
+  only: ['tags', 'master']
+ 
 devbuild:
   stage: build
   script:
-    - docker login -u $docker_username -p $docker_password $docker_registry
-    - docker build -t "$docker_registry/$docker_username/$CI_PROJECT_NAME:latest" .
-    - docker push "$docker_registry/$docker_username/$CI_PROJECT_NAME:latest"
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY
+    - docker build -t $DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME .
+    - docker tag $DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME"
+    - docker push "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME"
   only:
-    - master
+    - staging
+
+tests:
+  stage: test
+  script:
+    - echo "testing here"
+  only:
+    - staging
 
 devdeploy:
   stage: deploy
-  image: "dtzar/helm-kubectl:$drone_version"
+  image: dtzar/helm-kubectl:$DRONE_VERSION
+  retry: 1
   script:
     - mkdir -p /root/.kube
-    - cp "$kube_config" /root/.kube/config
-    - kubectl get pods -n=staging 
+    - cp "$KUBE_CONFIG_STAGING" /root/.kube/config
+    - kubectl get pods --all-namespaces 
     - ls && pwd
-    # - helm upgrade --install express-ping-service ./charts/$CI_PROJECT_NAME --namespace staging --debug --wait
+    - helm init --service-account tiller --history-max 100
+    - helm upgrade --install $CI_PROJECT_NAME ./charts/$CI_PROJECT_NAME --namespace staging --debug
   only:
-    - master
+    - staging
+
+proddeploy:
+  stage: deploy
+  image: dtzar/helm-kubectl:$DRONE_VERSION
+  script:
+    # - '[ ! -z "$CI_BUILD_TAG" ]'
+    - mkdir -p /root/.kube
+    - cp "$KUBE_CONFIG_PRODUCTION" /root/.kube/config
+    - kubectl get pods --all-namespaces
+    - ls && pwd
+    - helm init --service-account tiller --history-max 100
+    - helm upgrade --install $CI_PROJECT_NAME ./charts/$CI_PROJECT_NAME --namespace prod --debug
+  only: ['tags', 'master']
+
+cleanup_failure_job:
+  stage: cleanup
+  image: alpine
+  script:
+    - apk add curl
+    - wget $SLACK_NOTIFICATION_SCRIPT -O notify.sh
+    - sh notify.sh "FAILURE"
+  when: on_failure
+
+cleanup_success_job:
+  stage: cleanup
+  image: alpine
+  script:
+    - apk add curl
+    - wget $SLACK_NOTIFICATION_SCRIPT -O notify.sh
+    - sh notify.sh "SUCCESS"
+  when: on_success
+
+notify_me:
+  stage: notify
+  image: alpine
+  allow_failure: true
+  script: 
+    - apk add curl
+    - wget $SLACK_NOTIFICATION_SCRIPT -O notify.sh
+    - sh notify.sh "START"
+  when: always

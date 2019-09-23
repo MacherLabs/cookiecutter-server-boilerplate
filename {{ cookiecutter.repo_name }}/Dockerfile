@@ -25,16 +25,33 @@ ENV PORT ${APP_PORT}
 # Expose ports
 EXPOSE ${APP_PORT}
 
+{% if cookiecutter.project_type == "behaviour" %}
+WORKDIR /
+
+# Add Dependency files
+COPY app/requirements.txt .
+RUN pip install -r requirements.txt
+
+# Install Pykafka
+RUN apt-get install -y librdkafka-dev
+RUN RDKAFKA_INSTALL=system pip install pykafka
+
+
+# Install AWS CLI
+RUN pip --no-cache-dir install --upgrade awscli
+# Download File Manager
+WORKDIR /sbin
+RUN wget https://raw.githubusercontent.com/MacherLabs/cloud-file-manager/master/awsFileManager.sh
+RUN chmod +x awsFileManager.sh
+{% endif %}
+
 # Add source code
+WORKDIR /
 COPY . .
 WORKDIR /app
 
 # Make scripts executable
-RUN chmod +x /start.sh
-RUN chmod +x /entrypoint.sh
-RUN chmod +x /app/install.sh
-RUN chmod +x /app/prestart.sh
-RUN chmod +x /app/serve.sh
+RUN chmod +x /start.sh /entrypoint.sh /app/install.sh /app/prestart.sh /app/serve.sh
 RUN /app/install.sh
 
 # Add Tini init system

@@ -3,7 +3,9 @@
 {% if cookiecutter.project_type == "apiserver" %}
 FROM {% if cookiecutter.use_alipine_base == "y" %}python:2.7.15-alpine3.8 {% else %}python:2.7.15 {% endif %}
 {% elif cookiecutter.project_type == "behaviour" %}
-FROM macherlabs.azurecr.io/edge:latest_cpu
+ARG ARCH
+FROM macherlabs.azurecr.io/macherlabs/edge_base:latest${ARCH:+-$ARCH}
+ARG ARCH
 {% else %}
 FROM ubuntu
 {% endif %}
@@ -32,10 +34,6 @@ WORKDIR /
 COPY app/requirements.txt .
 RUN pip install -r requirements.txt
 
-# Install Pykafka
-RUN apt-get install -y librdkafka-dev
-RUN RDKAFKA_INSTALL=system pip install pykafka
-
 
 # Install AWS CLI
 RUN pip --no-cache-dir install --upgrade awscli
@@ -59,10 +57,14 @@ RUN /app/install.sh
 RUN apk add --no-cache tini
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/entrypoint.sh"]
 {% elif cookiecutter.use_alipine_base == "n" %}
+{% if cookiecutter.project_type == "behaviour" %}
+
+{% else %}
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "-g", "--", "/entrypoint.sh"]
+{% endif %}
 {% else %}
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
@@ -80,7 +82,7 @@ ENV APP_HOST_NAME {{ cookiecutter.host_name }}
 ENV APP_MODULE {{ cookiecutter.repo_name.lower().replace('-', '_') }}
 ENV APP_THREADS 2
 # Make /app/* available to be imported by Python globally to better support several use cases like Alembic migrations.
-ENV PYTHONPATH=/app
+ENV PYTHONPATH="${PYTHONPATH}:/app"
 {% elif cookiecutter.framework == "express" %}
 ENV APP_HOST_NAME {{ cookiecutter.host_name }}
 {% else %}

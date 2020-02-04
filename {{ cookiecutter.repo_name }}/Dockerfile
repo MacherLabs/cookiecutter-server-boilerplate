@@ -30,17 +30,16 @@ EXPOSE ${APP_PORT}
 {% if cookiecutter.project_type == "behaviour" %}
 WORKDIR /
 
-# Add Dependency files
-COPY app/requirements.txt .
-RUN pip install -r requirements.txt
-
-
 # Install AWS CLI
 RUN pip --no-cache-dir install --upgrade awscli
 # Download File Manager
 WORKDIR /sbin
 RUN wget https://raw.githubusercontent.com/MacherLabs/cloud-file-manager/master/awsFileManager.sh
 RUN chmod +x awsFileManager.sh
+
+# Add Dependency files
+COPY app/requirements.txt .
+RUN pip install -r requirements.txt
 {% endif %}
 
 # Add source code

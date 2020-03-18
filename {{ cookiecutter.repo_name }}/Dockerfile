@@ -1,7 +1,7 @@
 {% if cookiecutter.framework == "flask" %}
 
 {% if cookiecutter.project_type == "apiserver" %}
-FROM {% if cookiecutter.use_alipine_base == "y" %}python:2.7.15-alpine3.8 {% else %}python:2.7.15 {% endif %}
+FROM {% if cookiecutter.use_alipine_base == "y" %}python:2.7.15-alpine3.8 {% else %}python:3.6.8 {% endif %}
 {% elif cookiecutter.project_type == "behaviour" %}
 ARG ARCH
 FROM macherlabs.azurecr.io/macherlabs/edge_base:latest${ARCH:+-$ARCH}

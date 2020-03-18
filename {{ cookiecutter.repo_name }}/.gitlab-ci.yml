@@ -5,87 +5,101 @@ services:
 stages:
   - notify
   - build
-  - test
-  - deploy
-  - cleanup
+  # - test
+  # - deploy
+  # - cleanup
 
 prodbuild:
   stage: build
+  environment:
+    name: production
+    url: https://api.vedalabs.in
   script:
-    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY
-    - docker build -t $DOCKER_USERNAME/$CI_PROJECT_NAME:latest .
-    - docker tag $DOCKER_USERNAME/$CI_PROJECT_NAME:latest "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:latest"
-    - docker push "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:latest"
-  only: ['tags', 'master']
- 
+    - printenv
+    - '[ ! -z "$CI_BUILD_TAG" ]'
+    - mkdir -p /root/.docker
+    - cp "$DOCKER_AUTH_CONFIG" /root/.docker/config.json
+    - docker build -t "$DOCKER_REGISTRY/$CI_PROJECT_PATH:$CI_BUILD_TAG" .
+    - docker push "$DOCKER_REGISTRY/$CI_PROJECT_PATH:$CI_BUILD_TAG"
+  only:
+    - tags
+
 devbuild:
   stage: build
+  environment:
+    name: staging
+    url: https://api.staging.vedalabs.in
   script:
-    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY
-    - docker build -t $DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME .
-    - docker tag $DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME"
-    - docker push "$DOCKER_REGISTRY/$DOCKER_USERNAME/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME"
+    - printenv
+    - mkdir -p /root/.docker
+    - cp "$DOCKER_AUTH_CONFIG" /root/.docker/config.json
+    - docker build -t "$DOCKER_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME" .
+    - docker push "$DOCKER_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME"
   only:
     - staging
 
-tests:
-  stage: test
-  script:
-    - echo "testing here"
-  only:
-    - staging
+# tests:
+#   stage: test
+#   image: alpine
+#   script:
+#     - echo "testing here"
+#   except:
+#     - master
 
-devdeploy:
-  stage: deploy
-  image: dtzar/helm-kubectl:$DRONE_VERSION
-  retry: 1
-  script:
-    - mkdir -p /root/.kube
-    - cp "$KUBE_CONFIG_STAGING" /root/.kube/config
-    - kubectl get pods --all-namespaces 
-    - ls && pwd
-    - helm init --service-account tiller --history-max 100
-    - helm upgrade --install $CI_PROJECT_NAME ./charts/$CI_PROJECT_NAME --namespace staging --debug
-  only:
-    - staging
+# devdeploy:
+#   stage: deploy
+#   image: "dtzar/helm-kubectl:$DRONE_VERSION"
+#   retry: 1
+#   environment:
+#     name: staging
+#     url: https://api.staging.vedalabs.in
+#   script:
+#     - mkdir -p /root/.kube
+#     - cp "$KUBE_CONFIG_STAGING" /root/.kube/config
+#     - kubectl get pods --all-namespaces
+#     - ls && pwd
+#     - helm init --service-account tiller --history-max 100
+#     - helm delete --debug --purge $CI_PROJECT_NAME
+#     - helm upgrade --install $CI_PROJECT_NAME ./charts/$CI_PROJECT_NAME --namespace $CI_COMMIT_REF_NAME --debug --set image.repotag=$CI_COMMIT_REF_NAME
+#   only:
+#     - staging
 
-proddeploy:
-  stage: deploy
-  image: dtzar/helm-kubectl:$DRONE_VERSION
-  script:
-    # - '[ ! -z "$CI_BUILD_TAG" ]'
-    - mkdir -p /root/.kube
-    - cp "$KUBE_CONFIG_PRODUCTION" /root/.kube/config
-    - kubectl get pods --all-namespaces
-    - ls && pwd
-    - helm init --service-account tiller --history-max 100
-    - helm upgrade --install $CI_PROJECT_NAME ./charts/$CI_PROJECT_NAME --namespace prod --debug
-  only: ['tags', 'master']
+# proddeploy:
+#   stage: deploy
+#   image: "dtzar/helm-kubectl:$DRONE_VERSION"
+#   environment:
+#     name: production
+#     url: https://api.vedalabs.in
+#   script:
+#     - '[ ! -z "$CI_BUILD_TAG" ]'
+#     - mkdir -p /root/.kube
+#     - cp "$KUBE_CONFIG_PRODUCTION" /root/.kube/config
+#     - kubectl get pods --all-namespaces
+#     - helm init --service-account tiller --history-max 100
+#     - helm upgrade --install $CI_PROJECT_NAME ./charts/$CI_PROJECT_NAME --namespace prod --debug --set image.repotag=$CI_BUILD_TAG
+#   only:
+#     - tags
+#     - manual
 
-cleanup_failure_job:
-  stage: cleanup
-  image: alpine
-  script:
-    - apk add curl
-    - wget $SLACK_NOTIFICATION_SCRIPT -O notify.sh
-    - sh notify.sh "FAILURE"
-  when: on_failure
 
-cleanup_success_job:
-  stage: cleanup
-  image: alpine
-  script:
-    - apk add curl
-    - wget $SLACK_NOTIFICATION_SCRIPT -O notify.sh
-    - sh notify.sh "SUCCESS"
-  when: on_success
+# cleanup_failure_job:
+#   stage: cleanup
+#   image: alpine
+#   script:
+#     - echo "this cleanup job runs on failure"
+#   when: on_failure
+
+# cleanup_success_job:
+#   stage: cleanup
+#   image: alpine
+#   script:
+#     - echo "this cleanup job runs on success"
+#   when: on_success
 
 notify_me:
   stage: notify
   image: alpine
   allow_failure: true
   script: 
-    - apk add curl
-    - wget $SLACK_NOTIFICATION_SCRIPT -O notify.sh
-    - sh notify.sh "START"
+    - echo "notifications hooks here"
   when: always
